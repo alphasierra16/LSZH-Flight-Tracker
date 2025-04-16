@@ -1,27 +1,57 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWISS Flüge über Zürich</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>SWISS-Flüge über ZRH</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
 </head>
 <body>
-    <iframe 
-        src="https://globe.adsbexchange.com/?lat=47.4582&lon=8.5555&zoom=12&showLabels=true&hideSidebar=true"
-        title="Live-Flugkarte Zürich" allowfullscreen>
-    </iframe>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([47.4582, 8.5555], 10); // ZRH
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    async function fetchSWISSPlanes() {
+      const response = await fetch('https://opensky-network.org/api/states/all');
+      const data = await response.json();
+      const states = data.states;
+
+      states.forEach(plane => {
+        const callsign = plane[1]?.trim();
+        const registration = plane[9];
+        const lat = plane[6];
+        const lon = plane[5];
+
+        // Nur SWISS-Flugzeuge mit gültiger Position
+        if (callsign?.startsWith('SWR') && lat && lon) {
+          L.marker([lat, lon])
+            .addTo(map)
+            .bindPopup(`<strong>${callsign}</strong><br>Reg: ${registration || 'unbekannt'}`);
+        }
+      });
+    }
+
+    fetchSWISSPlanes();
+  </script>
 </body>
 </html>
