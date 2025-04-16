@@ -1,61 +1,40 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <title>SWISS-Flüge über ZRH</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-  />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SWISS Radar – Live über ZRH</title>
   <style>
     html, body {
-      height: 100%;
       margin: 0;
-    }
-    #map {
+      padding: 0;
       height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    .header {
+      background-color: #d80000;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    iframe {
+      width: 100%;
+      height: calc(100% - 60px);
+      border: none;
     }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-  <script>
-    const map = L.map('map').setView([47.4647, 8.5492], 18); // Zürich Flughafen (ZRH)
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    async function fetchSWISSFlights() {
-      try {
-        // API-URL von OpenSky Network - Daten für Zürich
-        const response = await fetch('https://opensky-network.org/api/states/all?lamin=47.4&lomin=8.4&lamax=47.6&lomax=8.7');
-        const data = await response.json();
-
-        // Filter für SWISS-Flüge (Callsign = 'SWR')
-        data.states.forEach(ac => {
-          const callsign = ac[1];
-          const reg = ac[4] || 'unbekannt';
-          const lat = ac[6];
-          const lon = ac[5];
-
-          if (callsign && callsign.startsWith('SWR') && lat && lon) {
-            L.marker([lat, lon])
-              .addTo(map)
-              .bindPopup(`<strong>${callsign}</strong><br>Reg: ${reg}`);
-          }
-        });
-      } catch (error) {
-        console.error('Fehler beim Laden der Daten:', error);
-      }
-    }
-
-    fetchSWISSFlights();
-  </script>
+  <div class="header">
+    SWISS Live Radar – ZRH
+  </div>
+  <iframe 
+    src="https://www.radarbox.com/@47.4647,8.5492,z12,sSWR" 
+    title="SWISS Flights over ZRH">
+  </iframe>
 </body>
 </html>
+
 
 
