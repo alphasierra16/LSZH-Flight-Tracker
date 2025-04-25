@@ -1,3 +1,47 @@
-<script>
-  window.location.href = "https://www.radarbox.com/@47.4647,8.5492,z12,sSWR";
-</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flüge über Zürich</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([47.45, 8.55], 9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    async function fetchFlights() {
+      try {
+        const res = await fetch("https://api.flightradar24.com/common/v1/flight/list.json?bounds=47.1,47.8,8.1,8.9", {
+          headers: {
+            "Authorization": "Bearer 9e8267a4-b527-4b88-bf67-aa1ceb3aa601|Ye1P6bCPEjKL8Pw04X8SItakVEkNbPP9wrPNrTeNc87f1f27"
+          }
+        });
+        const json = await res.json();
+        const flights = json.result.response.data;
+
+        flights.forEach(flight => {
+          const lat = flight.latitude;
+          const lon = flight.longitude;
+          const callsign = flight.identification.callsign || "No callsign";
+          if (lat && lon) {
+            L.marker([lat, lon]).addTo(map).bindTooltip(callsign, { permanent: false });
+          }
+        });
+      } catch (e) {
+        console.error("Fehler beim Abrufen der Flugdaten:", e);
+      }
+    }
+
+    fetchFlights();
+    setInterval(fetchFlights, 30000); // Alle 30 Sek. aktualisieren
+  </script>
+</body>
+</html>
