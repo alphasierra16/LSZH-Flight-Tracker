@@ -1,47 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Flüge über Zürich</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <meta charset="UTF-8" />
+  <title>Live-Flüge über Zürich</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    html, body, #map { height: 100%; margin: 0; }
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
-
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([47.45, 8.55], 9);
+    const map = L.map('map').setView([47.45, 8.55], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    async function fetchFlights() {
+    async function loadFlights() {
       try {
-        const res = await fetch("https://api.flightradar24.com/common/v1/flight/list.json?bounds=47.1,47.8,8.1,8.9", {
+        const response = await fetch("https://api.flightradar24.com/common/v1/feed.json?bounds=47.8,47.2,8.9,8.2&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=1&air=1&vehicles=1&estimated=1&maxage=14400&gliders=1&stats=1", {
           headers: {
+            "User-Agent": "YourApp/1.0",
             "Authorization": "Bearer 9e8267a4-b527-4b88-bf67-aa1ceb3aa601|Ye1P6bCPEjKL8Pw04X8SItakVEkNbPP9wrPNrTeNc87f1f27"
           }
         });
-        const json = await res.json();
-        const flights = json.result.response.data;
-
-        flights.forEach(flight => {
-          const lat = flight.latitude;
-          const lon = flight.longitude;
-          const callsign = flight.identification.callsign || "No callsign";
-          if (lat && lon) {
-            L.marker([lat, lon]).addTo(map).bindTooltip(callsign, { permanent: false });
+        const data = await response.json();
+        map.eachLayer(layer => {
+          if (layer instanceof L.Marker) {
+            map.removeLayer(layer);
+          }
+        });
+        data.result.response.data.forEach(flight => {
+          const { latitude, longitude, aircraft, identification } = flight;
+          if (latitude && longitude) {
+            L.marker([latitude, longitude])
+              .addTo(map)
+              .bindTooltip(`${identification.callsign || 'No Callsign'}`, { permanent: false });
           }
         });
       } catch (e) {
-        console.error("Fehler beim Abrufen der Flugdaten:", e);
+        console.error("Fehler beim Laden der Flugdaten:", e);
       }
     }
 
-    fetchFlights();
-    setInterval(fetchFlights, 30000); // Alle 30 Sek. aktualisieren
+    loadFlights();
+    setInterval(loadFlights, 15000); // Alle 15 Sekunden aktualisieren
   </script>
 </body>
 </html>
+
